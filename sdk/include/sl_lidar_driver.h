@@ -61,7 +61,7 @@ namespace sl {
 #define DEPRECATED_WARN(fn, replacement) do { \
         static bool __shown__ = false; \
         if (!__shown__) { \
-            printDeprecationWarn(fn, replacement); \
+        	fprintf(stderr, "*WARN* YOU ARE USING DEPRECATED API: %s, PLEASE MOVE TO %s\n", fn, replacement); \
             __shown__ = true; \
         } \
     } while (0)

@@ -70,6 +70,8 @@ public:
             return LOCK_TIMEOUT;
         }
 
+#elif SDK_OS_BAREMETAL
+    	return LOCK_OK; //no mutex on baremetal
 #else
 #ifdef _MACOS
         if (timeout !=0 ) {
@@ -118,6 +120,8 @@ public:
     {
 #ifdef _WIN32
         ReleaseMutex(_lock);
+#elif SDK_OS_BAREMETAL
+    	// no mutex in baremetal
 #else
         pthread_mutex_unlock(&_lock);
 #endif
@@ -128,6 +132,8 @@ public:
     {
         return _lock;
     }
+#elif SDK_OS_BAREMETAL
+    // no mutex in baremetal
 #else
     pthread_mutex_t *getLockHandle()
     {
@@ -142,6 +148,8 @@ protected:
     {
 #ifdef _WIN32
         _lock = CreateMutex(NULL,FALSE,NULL);
+#elif SDK_OS_BAREMETAL
+        // no mutex in baremetal
 #else
         pthread_mutex_init(&_lock, NULL);
 #endif
@@ -154,6 +162,8 @@ protected:
 
         if (_lock) CloseHandle(_lock);
         _lock = NULL;
+#elif SDK_OS_BAREMETAL
+        // no mutex in baremetal
 #else
         pthread_mutex_destroy(&_lock);
 #endif
@@ -161,6 +171,8 @@ protected:
 
 #ifdef _WIN32
     HANDLE  _lock;
+#elif SDK_OS_BAREMETAL
+    // no mutex in baremetal
 #else
     pthread_mutex_t _lock;
 #endif

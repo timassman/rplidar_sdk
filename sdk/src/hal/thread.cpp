@@ -39,8 +39,10 @@
 #include "arch/win32/winthread.hpp"
 #elif defined(_MACOS)
 #include "arch/macOS/thread.hpp"
-#elif defined(__GNUC__)
+#elif defined(__linux__)
 #include "arch/linux/thread.hpp"
+#elif defined(SDK_OS_BAREMETAL)
+#include "arch/baremetal/thread.hpp"
 #else
 #error no threading implemention found for this platform.
 #endif

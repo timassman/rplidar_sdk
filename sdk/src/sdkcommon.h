@@ -37,8 +37,10 @@
 #include "arch/win32/arch_win32.h"
 #elif defined(_MACOS)
 #include "arch/macOS/arch_macOS.h"
-#elif defined(__GNUC__)
+#elif defined(__linux__)
 #include "arch/linux/arch_linux.h"
+#elif defined(SDK_OS_BAREMETAL)
+#include "arch/baremetal/arch_baremetal.h"
 #else
 #error "unsupported target"
 #endif

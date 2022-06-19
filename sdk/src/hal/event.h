@@ -43,12 +43,15 @@ public:
     {
         EVENT_OK = 1,
         EVENT_FAILED = 0,
-        EVENT_TIMEOUT = 0xFFFFFFFFFFFFFFFF,
+		// prevent narrowing conversion of 'rp::hal::Event::EVENT_TIMEOUT' from 'long long unsigned int' to 'long unsigned int'
+        EVENT_TIMEOUT = 0xFFFFFFFF, //0xFFFFFFFFFFFFFFFF,
     };
     
     Event(bool isAutoReset = true, bool isSignal = false)
 #ifdef _WIN32
         : _event(NULL)
+#elif SDK_OS_BAREMETAL
+    // no event in baremetal
 #else
         : _is_signalled(isSignal)
         , _isAutoReset(isAutoReset)
@@ -56,6 +59,8 @@ public:
     {
 #ifdef _WIN32
         _event = CreateEvent(NULL, isAutoReset?FALSE:TRUE, isSignal?TRUE:FALSE, NULL); 
+#elif SDK_OS_BAREMETAL
+    // no event in baremetal
 #else
         pthread_mutex_init(&_cond_locker, NULL);
         pthread_cond_init(&_cond_var, NULL);
@@ -72,6 +77,8 @@ public:
         if (isSignal){
 #ifdef _WIN32
             SetEvent(_event);
+#elif SDK_OS_BAREMETAL
+    // no event in baremetal
 #else
             pthread_mutex_lock(&_cond_locker);
                
@@ -87,6 +94,8 @@ public:
         {
 #ifdef _WIN32
             ResetEvent(_event);
+#elif SDK_OS_BAREMETAL
+    // no event in baremetal
 #else
             pthread_mutex_lock(&_cond_locker);
             _is_signalled = false;
@@ -108,6 +117,8 @@ public:
             return EVENT_TIMEOUT;
         }
         return EVENT_OK;
+#elif SDK_OS_BAREMETAL
+    return EVENT_OK; // no event in baremetal
 #else
         unsigned long ans = EVENT_OK;
         pthread_mutex_lock( &_cond_locker );
@@ -168,6 +179,8 @@ protected:
     {
 #ifdef _WIN32
         CloseHandle(_event);
+#elif SDK_OS_BAREMETAL
+    // no event in baremetal
 #else
         pthread_mutex_destroy(&_cond_locker);
         pthread_cond_destroy(&_cond_var);
@@ -176,6 +189,8 @@ protected:
 
 #ifdef _WIN32
         HANDLE _event;
+#elif SDK_OS_BAREMETAL
+    // no event in baremetal
 #else
         pthread_cond_t         _cond_var;
         pthread_mutex_t        _cond_locker;

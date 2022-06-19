@@ -56,11 +56,6 @@ typedef decltype(nullptr) nullptr_t;
 #endif /* C++11.  */
 
 namespace sl {
-    static void printDeprecationWarn(const char* fn, const char* replacement)
-    {
-        fprintf(stderr, "*WARN* YOU ARE USING DEPRECATED API: %s, PLEASE MOVE TO %s\n", fn, replacement);
-    }
-
     static void convert(const sl_lidar_response_measurement_node_t& from, sl_lidar_response_measurement_node_hq_t& to)
     {
         to.angle_z_q14 = (((from.angle_q6_checkbit) >> SL_LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) << 8) / 90;  //transfer to q14 Z-angle
@@ -69,12 +64,14 @@ namespace sl {
         to.quality = (from.sync_quality >> SL_LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT) << SL_LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT;  //remove the last two bits and then make quality from 0-63 to 0-255
     }
 
+    /* unused
     static void convert(const sl_lidar_response_measurement_node_hq_t& from, sl_lidar_response_measurement_node_t& to)
     {
         to.sync_quality = (from.flag & SL_LIDAR_RESP_MEASUREMENT_SYNCBIT) | ((from.quality >> SL_LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT) << SL_LIDAR_RESP_MEASUREMENT_QUALITY_SHIFT);
         to.angle_q6_checkbit = 1 | (((from.angle_z_q14 * 90) >> 8) << SL_LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT);
         to.distance_q2 = from.dist_mm_q2 > sl_u16(-1) ? sl_u16(0) : sl_u16(from.dist_mm_q2);
     }
+    */
 
     static sl_u32 _varbitscale_decode(sl_u32 scaled, sl_u32 & scaleLevel)
     {
@@ -233,7 +230,11 @@ namespace sl {
             , _cached_sampleduration_express(LEGACY_SAMPLE_DURATION)
             , _cached_scan_node_hq_count(0)
             , _cached_scan_node_hq_count_for_interval_retrieve(0)
-        {}
+        {
+#ifdef SDK_OS_BAREMETAL
+        	rp::arch::rp_timer_init(); // initialize GPT timer
+#endif
+        }
 
         sl_result connect(IChannel* channel)
         {
@@ -1055,7 +1056,7 @@ namespace sl {
         
         sl_result  _sendCommand(sl_u16 cmd, const void * payload = NULL, size_t payloadsize = 0 )
         {
-            sl_u8 pkt_header[10];
+            // sl_u8 pkt_header[10]; // unused
             sl_u8 checksum = 0;
 
             std::vector<sl_u8> cmd_packet;
@@ -1086,7 +1087,7 @@ namespace sl {
   
             }
             sl_u8 packet[1024];
-            for (int pos = 0; pos < cmd_packet.size(); pos++) {
+            for (size_t pos = 0; pos < cmd_packet.size(); pos++) {
                 packet[pos] = cmd_packet[pos];
             }
             _channel->write(packet, cmd_packet.size());
